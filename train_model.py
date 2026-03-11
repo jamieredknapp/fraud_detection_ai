@@ -4,8 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
 from xgboost import XGBClassifier
 
-#DATA_PATH = "data/PS_20174392719_1491204439457_log.csv"
-DATA_PATH = "home/ayah/projects/dataset/fraud/data/PS_20174392719_1491204439457_log.csv"
+DATA_PATH = "/home/ayah/projects/dataset/fraud/data/PS_20174392719_1491204439457_log.csv"
 
 
 def load_data(path):
