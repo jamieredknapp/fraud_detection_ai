@@ -381,6 +381,282 @@ A simple model with well-designed features can outperform a complex model traine
 
 This project aims to progressively incorporate more sophisticated feature engineering strategies in future versions.
 
+
+Feature Store
+
+# PySpark + NVIDIA RAPIDS GPU Accelerated 
+
+---
+
+## 🖥️ Environment
+
+| Component | Version |
+|-----------|---------|
+| OS | Ubuntu 22.04 (Docker Container) |
+| GPU | 2x NVIDIA GeForce RTX 5060 Ti (16GB each) |
+| CUDA | 13.0 |
+| Java | OpenJDK 17 |
+| Spark | 3.5.0 (Standalone) |
+| RAPIDS Accelerator | 24.02.0 |
+| Python | 3.10.12 |
+
+---
+
+## 🐳 Docker Setup
+
+Run the container with GPU passthrough and dataset volume mount:
+
+```bash
+docker run --gpus all -it --rm \
+  -p 4040:4040 \
+  -p 8080:8080 \
+  -v /home/ayah/datasets/kartik:/data \
+  spark-gpu-ready
+```
+
+---
+
+## ⚙️ Chapter 1: Installing Spark 3.5.0 Standalone
+
+### 1.1 Download & Extract
+
+```bash
+cd /opt
+wget https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
+tar -xzf spark-3.5.0-bin-hadoop3.tgz
+rm spark-3.5.0-bin-hadoop3.tgz
+mv spark-3.5.0-bin-hadoop3 spark
+```
+
+### 1.2 Set Environment Variables
+
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+export SPARK_HOME=/opt/spark
+export PATH=$JAVA_HOME/bin:$SPARK_HOME/bin:$SPARK_HOME/sbin:$PATH
+export PYSPARK_PYTHON=python3
+
+# Save permanently to .bashrc
+cat >> ~/.bashrc << 'EOF'
+
+# Java & Spark
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+export SPARK_HOME=/opt/spark
+export PATH=$JAVA_HOME/bin:$SPARK_HOME/bin:$SPARK_HOME/sbin:$PATH
+export PYSPARK_PYTHON=python3
+EOF
+
+source ~/.bashrc
+```
+
+### 1.3 Verify Installation
+
+```bash
+spark-submit --version
+# Output: version 3.5.0, Scala 2.12.18, OpenJDK 64-Bit Server VM, 17.0.18
+```
+
+---
+
+## ⚡ Chapter 2: Setting Up NVIDIA RAPIDS Accelerator
+
+### 2.1 Download RAPIDS JAR
+
+```bash
+mkdir -p /opt/spark/rapids
+
+wget https://repo1.maven.org/maven2/com/nvidia/rapids-4-spark_2.12/24.02.0/rapids-4-spark_2.12-24.02.0.jar \
+  -O /opt/spark/rapids/rapids-4-spark.jar
+
+ls -lh /opt/spark/rapids/
+```
+
+### 2.2 Verify GPU Discovery Script
+
+Spark 3.5.0 standalone ships with a built-in GPU discovery script:
+
+```bash
+# Check the script exists
+ls -la /opt/spark/examples/src/main/scripts/getGpusResources.sh
+
+# Run it manually to verify output
+bash /opt/spark/examples/src/main/scripts/getGpusResources.sh
+# Expected output: {"name": "gpu", "addresses":["0","1"]}
+```
+
+### 2.3 Create PySpark + RAPIDS Startup Script
+
+```bash
+cat > ~/start-pyspark-rapids.sh << 'EOF'
+#!/bin/bash
+pyspark \
+  --master local[2] \
+  --jars /opt/spark/rapids/rapids-4-spark.jar \
+  --conf spark.plugins=com.nvidia.spark.SQLPlugin \
+  --conf spark.rapids.sql.enabled=true \
+  --conf spark.rapids.sql.exec.CollectLimitExec=true \
+  --conf spark.driver.host=127.0.0.1 \
+  --conf spark.driver.bindAddress=127.0.0.1
+EOF
+
+chmod +x ~/start-pyspark-rapids.sh
+```
+
+### 2.4 Key Findings: RAPIDS Configuration in Local Mode
+
+> **Important:** In Spark local mode, setting `spark.executor.resource.gpu` and `spark.task.resource.gpu` causes tasks to hang in a pending state because the GPU never gets assigned to the executor. The fix is to let RAPIDS detect the GPU directly via CUDA without the Spark resource framework.
+
+| Config | Value |
+|--------|-------|
+| `spark.plugins` | `com.nvidia.spark.SQLPlugin` |
+| `spark.rapids.sql.enabled` | `true` |
+| `spark.rapids.sql.exec.CollectLimitExec` | `true` |
+| `spark.driver.host` | `127.0.0.1` |
+| `spark.driver.bindAddress` | `127.0.0.1` |
+
+### 2.5 Start PySpark + RAPIDS
+
+```bash
+~/start-pyspark-rapids.sh
+```
+
+### 2.6 Verify GPU Detection
+
+```python
+print(spark.sparkContext.resources)
+# Output: {'gpu': <ResourceInformation name=gpu, addresses=['0', '1']>}
+```
+
+---
+
+## 📦 Chapter 3: Creating Feature Store
+
+### 3.1 Dataset
+
+| Info | Detail |
+|------|--------|
+| Source | [Kaggle — Credit Card Fraud Detection](https://www.kaggle.com/datasets/kartik2112/fraud-detection) |
+| Training file | `fraudTrain.csv` |
+| Test file | `fraudTest.csv` |
+| Training size | 335 MB |
+| Training rows | 1,296,676 |
+| Columns | 23 |
+
+**Column overview:**
+
+| Column | Description |
+|--------|-------------|
+| `trans_date_trans_time` | Transaction timestamp |
+| `cc_num` | Credit card number |
+| `merchant` | Merchant name |
+| `category` | Merchant category |
+| `amt` | Transaction amount |
+| `first`, `last` | Cardholder name |
+| `gender` | Cardholder gender |
+| `street`, `city`, `state`, `zip` | Cardholder address |
+| `lat`, `long` | Cardholder coordinates |
+| `city_pop` | City population |
+| `job` | Cardholder occupation |
+| `dob` | Date of birth |
+| `trans_num` | Transaction ID |
+| `unix_time` | Unix timestamp |
+| `merch_lat`, `merch_long` | Merchant coordinates |
+| `is_fraud` | Target label (0 = legitimate, 1 = fraud) |
+
+### 3.2 Read CSV
+
+> **Note:** CSV/Text format is not GPU-accelerated (RAPIDS limitation). The GPU is utilized during downstream processing and transformation operations after the data is loaded.
+
+```python
+df = spark.read \
+    .option("header", True) \
+    .option("inferSchema", True) \
+    .csv("/data/fraudTrain.csv")
+
+# Rename unnamed index column
+df = df.withColumnRenamed("_c0", "row_index")
+
+print(f"Total rows: {df.count()}")
+print(f"Total columns: {len(df.columns)}")
+df.printSchema()
+```
+
+### 3.3 Convert to Parquet (Feature Store)
+
+Parquet is chosen as the Feature Store format because:
+- ✅ **Columnar format** — querying specific columns is significantly faster
+- ✅ **GPU-accelerated** — full RAPIDS support for Parquet reads and operations
+- ✅ **Schema enforcement** — data types are stored in metadata
+- ✅ **Compression** — much smaller file size compared to CSV
+
+```python
+df.write \
+    .mode("overwrite") \
+    .parquet("/data/fraud_parquet")
+
+print("Feature Store created successfully!")
+```
+
+### 3.4 Verify Feature Store
+
+```python
+df_parquet = spark.read.parquet("/data/fraud_parquet")
+
+df_parquet.printSchema()
+print(f"Total rows: {df_parquet.count()}")
+# Output: Total rows: 1,296,675
+
+df_parquet.limit(5).show()
+```
+
+### 3.5 Query Feature Store with GPU Acceleration
+
+```python
+# GPU-accelerated groupBy & aggregation
+df_parquet.groupBy("is_fraud").count().show()
+# +--------+-------+
+# |is_fraud|  count|
+# +--------+-------+
+# |       0|1289169|
+# |       1|   7506|
+# +--------+-------+
+
+# Filter fraud transactions only
+df_fraud = df_parquet.filter(df_parquet.is_fraud == 1)
+print(f"Total fraud transactions: {df_fraud.count()}")
+```
+
+---
+
+## 📁 Project Structure
+
+```
+/opt/spark/                                                   # Spark 3.5.0 standalone
+/opt/spark/rapids/rapids-4-spark.jar                          # RAPIDS JAR
+/opt/spark/examples/src/main/scripts/getGpusResources.sh      # GPU discovery script
+/data/fraudTrain.csv                                          # Raw training dataset
+/data/fraudTest.csv                                           # Raw test dataset
+/data/fraud_parquet/                                          # Feature Store (Parquet)
+~/start-pyspark-rapids.sh                                     # PySpark startup script
+```
+
+---
+
+## 🔑 Notes
+
+1. **PySpark pip package is not compatible with RAPIDS** — Spark standalone must be installed instead
+2. **JAVA_HOME must be set manually** to Java 17 inside the container
+3. **SPARK_HOME must point to the standalone Spark directory**, not the pip package path
+4. **GPU resource framework causes task hang in local mode** — `executor.resource.gpu` and `task.resource.gpu` should be omitted; let RAPIDS detect the GPU via CUDA directly
+5. **CSV format is not GPU-accelerated** — convert to Parquet for full GPU acceleration
+6. **Driver hostname must be bound to `127.0.0.1`** inside the container to avoid RPC endpoint resolution errors
+
+---
+
+*Generated on 2026-03-24 | Spark 3.5.0 + RAPIDS 24.02.0 + CUDA 13.0*
+
+
+
 License
 
 MIT License
