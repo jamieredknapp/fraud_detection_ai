@@ -35,20 +35,22 @@ Future versions introduce streaming, monitoring, and AML-style rule engines.
 ---
 
 # Fraud Detection Workflow
-Transaction arrives
-│
-▼
-Feature extraction
-│
-▼
-Fraud probability prediction
-│
-▼
-Threshold decision
-│
-▼
-Fraud alert or approval
 
+```
+Transaction arrives
+        │
+        ▼
+Feature extraction
+        │
+        ▼
+Fraud probability prediction
+        │
+        ▼
+Threshold decision
+        │
+        ▼
+Fraud alert or approval
+```
 
 ---
 
@@ -56,13 +58,14 @@ Fraud alert or approval
 
 Fraud detection is not only about prediction accuracy.
 
-Expected Loss =
-(FN × Fraud Amount) + (FP × Review Cost)
+```
+Expected Loss = (FN × Fraud Amount) + (FP × Review Cost)
+```
 
 Where:
 
 | Term | Meaning |
-|----|----|
+|----|-----|
 | FN | Missed fraud transactions |
 | FP | Legitimate transactions flagged as fraud |
 | Review Cost | Operational cost of manual review |
@@ -77,124 +80,130 @@ POST `/predict`
 
 ```json
 {
- "amount": 150.0,
- "time": 12000,
- "features": [0.21, -1.32, 0.78, -0.11]
+  "amount": 150.0,
+  "time": 12000,
+  "features": [0.21, -1.32, 0.78, -0.11]
 }
-
+```
 
 Example Response:
 
+```json
 {
- "fraud_probability": 0.82,
- "decision": "fraud",
- "threshold": 0.35
+  "fraud_probability": 0.82,
+  "decision": "fraud",
+  "threshold": 0.35
 }
+```
 
-Model Evaluation
+---
+
+# Model Evaluation
 
 Example metrics:
-| Metric    | Score |
+
+| Metric | Score |
 | --------- | ----- |
-| Precision | 0.91  |
-| Recall    | 0.83  |
-| F1 Score  | 0.87  |
-| ROC AUC   | 0.96  |
+| Precision | 0.91 |
+| Recall | 0.83 |
+| F1 Score | 0.87 |
+| ROC AUC | 0.96 |
 
 In fraud detection systems, recall is usually prioritized to reduce missed fraudulent transactions.
 
-Tech Stack
+---
+
+# Tech Stack
 
 Core technologies used:
 
-Python
+- Python
+- XGBoost
+- Scikit-learn
+- FastAPI
+- pyenv
+- Docker (planned)
+- AWS EC2 deployment (planned)
 
-XGBoost
+---
 
-Scikit-learn
+# Project Structure
 
-FastAPI
-
-pyenv
-
-Docker (planned)
-
-AWS EC2 deployment (planned)
-
-Project Structure
+```
 fraud_detection_ai/
-
-data/            # datasets (ignored)
-models/          # trained models
-
-src/
+  data/            # datasets (ignored)
+  models/          # trained models
+  src/
     train_model.py
     predict.py
-
-api/
+  api/
     main.py
+  requirements.txt
+  .gitignore
+  README.md
+```
 
-requirements.txt
-.gitignore
-README.md
+---
 
-Setup
+# Setup
 
 Install Python with pyenv:
 
+```bash
 pyenv install 3.11.8
 pyenv virtualenv 3.11.8 fraud-ai-env
 pyenv activate fraud-ai-env
+```
 
 Install dependencies:
 
+```bash
 pip install -r requirements.txt
-Training the Model
+```
+
+Training the Model:
+
+```bash
 python src/train_model.py
+```
 
 Outputs:
+- trained model
+- evaluation metrics
+- saved artifacts
 
-trained model
+Running the API:
 
-evaluation metrics
-
-saved artifacts
-
-Running the API
+```bash
 uvicorn api.main:app --reload
+```
 
-Open API documentation:
+Open API documentation: http://localhost:8000/docs
 
-http://localhost:8000/docs
-Version Roadmap
+---
+
+# Version Roadmap
 
 The repository evolves through multiple versions.
 
-Version 1 — ML Fraud Detection API
+**Version 1 — ML Fraud Detection API**
+- fraud detection model
+- prediction API
+- basic evaluation
 
-fraud detection model
+**Version 2 — Cost Optimization**
+- expected financial loss modeling
+- threshold optimization
+- risk scoring
 
-prediction API
+**Version 3 — Monitoring**
+- performance tracking
+- drift detection
+- fraud statistics dashboard
 
-basic evaluation
+**Version 4 — Event Driven System**
 
-Version 2 — Cost Optimization
-
-expected financial loss modeling
-
-threshold optimization
-
-risk scoring
-
-Version 3 — Monitoring
-
-performance tracking
-
-drift detection
-
-fraud statistics dashboard
-
-Version 4 — Event Driven System
+```
 Transaction
       │
       ▼
@@ -205,29 +214,27 @@ Fraud Scoring Service
       │
       ▼
 Decision Engine
-Version 5 — Behavioral Fraud + AML
+```
+
+**Version 5 — Behavioral Fraud + AML**
 
 Advanced detection features:
+- transaction velocity checks
+- user behavior profiling
+- anomaly detection
+- AML monitoring rules
 
-transaction velocity checks
+---
 
-user behavior profiling
-
-anomaly detection
-
-AML monitoring rules
-
-Future Work
+# Future Work
 
 Potential improvements:
+- graph-based fraud detection
+- real-time transaction simulator
+- fraud investigation dashboard
+- model monitoring pipeline
 
-graph-based fraud detection
-
-real-time transaction simulator
-
-fraud investigation dashboard
-
-model monitoring pipeline
+---
 
 # Model Alternatives
 
@@ -292,8 +299,6 @@ Velocity features measure **how quickly transactions occur**.
 
 Fraud often involves rapid sequences of transactions.
 
-Examples:
-
 | Feature | Description |
 |------|------|
 | Transactions per minute | Number of transactions in short time window |
@@ -307,8 +312,6 @@ Velocity features help detect **card testing attacks**.
 ## Behavioral Features
 
 These features capture deviations from a user's normal behavior.
-
-Examples:
 
 | Feature | Description |
 |------|------|
@@ -324,8 +327,6 @@ Fraud often appears as **behavioral anomalies**.
 
 Location patterns can reveal suspicious activity.
 
-Examples:
-
 | Feature | Description |
 |------|------|
 | Country mismatch | Card used in unexpected location |
@@ -340,8 +341,6 @@ These features help detect **card cloning and account takeover**.
 
 Fraud often happens at unusual times.
 
-Examples:
-
 | Feature | Description |
 |------|------|
 | Night transactions | Late-night activity |
@@ -354,22 +353,21 @@ Examples:
 
 Future versions of the project will introduce a dedicated feature engineering pipeline.
 
-Example architecture:
-
+```
 Transaction
-│
-▼
+      │
+      ▼
 Raw Transaction Data
-│
-▼
+      │
+      ▼
 Feature Engineering Layer
-│
-▼
+      │
+      ▼
 Feature Vector
-│
-▼
+      │
+      ▼
 Fraud Detection Model
-
+```
 
 ---
 
@@ -381,10 +379,11 @@ A simple model with well-designed features can outperform a complex model traine
 
 This project aims to progressively incorporate more sophisticated feature engineering strategies in future versions.
 
+---
 
-Feature Store
+# Feature Store
 
-# PySpark + NVIDIA RAPIDS GPU Accelerated 
+## PySpark + NVIDIA RAPIDS GPU Accelerated
 
 ---
 
@@ -411,8 +410,11 @@ docker run --gpus all -it --rm \
   -p 4040:4040 \
   -p 8080:8080 \
   -v /home/ayah/datasets/kartik:/data \
+  -v /home/ayah/opt:/opt2 \
   spark-gpu-ready
 ```
+
+> **Note:** Mount `/home/ayah/opt` to `/opt2` inside the container so Spark installation persists across container restarts.
 
 ---
 
@@ -420,15 +422,26 @@ docker run --gpus all -it --rm \
 
 ### 1.1 Download & Extract
 
+Install to `/opt2` (persistent mount) instead of `/opt` so it survives container restarts:
+
 ```bash
-cd /opt
+cd /opt2
 wget https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
 tar -xzf spark-3.5.0-bin-hadoop3.tgz
 rm spark-3.5.0-bin-hadoop3.tgz
 mv spark-3.5.0-bin-hadoop3 spark
+
+# Symlink to /opt
+ln -s /opt2/spark /opt/spark
 ```
 
-### 1.2 Set Environment Variables
+### 1.2 Install Java 17
+
+```bash
+apt update && apt install -y openjdk-17-jdk wget
+```
+
+### 1.3 Set Environment Variables
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
@@ -449,7 +462,7 @@ EOF
 source ~/.bashrc
 ```
 
-### 1.3 Verify Installation
+### 1.4 Verify Installation
 
 ```bash
 spark-submit --version
@@ -463,12 +476,12 @@ spark-submit --version
 ### 2.1 Download RAPIDS JAR
 
 ```bash
-mkdir -p /opt/spark/rapids
+mkdir -p /opt2/spark/rapids
 
 wget https://repo1.maven.org/maven2/com/nvidia/rapids-4-spark_2.12/24.02.0/rapids-4-spark_2.12-24.02.0.jar \
-  -O /opt/spark/rapids/rapids-4-spark.jar
+  -O /opt2/spark/rapids/rapids-4-spark.jar
 
-ls -lh /opt/spark/rapids/
+ls -lh /opt2/spark/rapids/
 ```
 
 ### 2.2 Verify GPU Discovery Script
@@ -487,7 +500,7 @@ bash /opt/spark/examples/src/main/scripts/getGpusResources.sh
 ### 2.3 Create PySpark + RAPIDS Startup Script
 
 ```bash
-cat > ~/start-pyspark-rapids.sh << 'EOF'
+cat > /opt2/start-pyspark-rapids.sh << 'EOF'
 #!/bin/bash
 pyspark \
   --master local[2] \
@@ -499,7 +512,8 @@ pyspark \
   --conf spark.driver.bindAddress=127.0.0.1
 EOF
 
-chmod +x ~/start-pyspark-rapids.sh
+chmod +x /opt2/start-pyspark-rapids.sh
+ln -s /opt2/start-pyspark-rapids.sh ~/start-pyspark-rapids.sh
 ```
 
 ### 2.4 Key Findings: RAPIDS Configuration in Local Mode
@@ -563,11 +577,23 @@ print(spark.sparkContext.resources)
 | `merch_lat`, `merch_long` | Merchant coordinates |
 | `is_fraud` | Target label (0 = legitimate, 1 = fraud) |
 
+**Class distribution:**
+
+| is_fraud | Count | Percentage |
+|----------|-------|------------|
+| 0 (legitimate) | 1,289,169 | 99.42% |
+| 1 (fraud) | 7,506 | 0.58% |
+
+> Dataset is highly imbalanced — only **0.58% fraud**. This requires special handling during model training such as SMOTE or class weighting.
+
 ### 3.2 Read CSV
 
-> **Note:** CSV/Text format is not GPU-accelerated (RAPIDS limitation). The GPU is utilized during downstream processing and transformation operations after the data is loaded.
+> **Note:** CSV/Text format is not GPU-accelerated (RAPIDS limitation). Disable RAPIDS when reading CSV, then re-enable for downstream GPU-accelerated operations.
 
 ```python
+# Disable Rapids for CSV read
+spark.conf.set("spark.rapids.sql.enabled", "false")
+
 df = spark.read \
     .option("header", True) \
     .option("inferSchema", True) \
@@ -600,6 +626,9 @@ print("Feature Store created successfully!")
 ### 3.4 Verify Feature Store
 
 ```python
+# Re-enable Rapids for GPU-accelerated operations
+spark.conf.set("spark.rapids.sql.enabled", "true")
+
 df_parquet = spark.read.parquet("/data/fraud_parquet")
 
 df_parquet.printSchema()
@@ -617,8 +646,8 @@ df_parquet.groupBy("is_fraud").count().show()
 # +--------+-------+
 # |is_fraud|  count|
 # +--------+-------+
-# |       0|1289169|
 # |       1|   7506|
+# |       0|1289169|
 # +--------+-------+
 
 # Filter fraud transactions only
@@ -631,13 +660,14 @@ print(f"Total fraud transactions: {df_fraud.count()}")
 ## 📁 Project Structure
 
 ```
-/opt/spark/                                                   # Spark 3.5.0 standalone
-/opt/spark/rapids/rapids-4-spark.jar                          # RAPIDS JAR
+/opt2/spark/                                                  # Spark 3.5.0 (persistent)
+/opt2/spark/rapids/rapids-4-spark.jar                         # RAPIDS JAR (persistent)
+/opt2/start-pyspark-rapids.sh                                 # PySpark startup script (persistent)
+/opt/spark/                                                   # Symlink to /opt2/spark
 /opt/spark/examples/src/main/scripts/getGpusResources.sh      # GPU discovery script
 /data/fraudTrain.csv                                          # Raw training dataset
 /data/fraudTest.csv                                           # Raw test dataset
 /data/fraud_parquet/                                          # Feature Store (Parquet)
-~/start-pyspark-rapids.sh                                     # PySpark startup script
 ```
 
 ---
@@ -647,16 +677,196 @@ print(f"Total fraud transactions: {df_fraud.count()}")
 1. **PySpark pip package is not compatible with RAPIDS** — Spark standalone must be installed instead
 2. **JAVA_HOME must be set manually** to Java 17 inside the container
 3. **SPARK_HOME must point to the standalone Spark directory**, not the pip package path
-4. **GPU resource framework causes task hang in local mode** — `executor.resource.gpu` and `task.resource.gpu` should be omitted; let RAPIDS detect the GPU via CUDA directly
-5. **CSV format is not GPU-accelerated** — convert to Parquet for full GPU acceleration
-6. **Driver hostname must be bound to `127.0.0.1`** inside the container to avoid RPC endpoint resolution errors
+4. **Install Spark to `/opt2` (persistent mount)** — survives container restarts without re-downloading
+5. **GPU resource framework causes task hang in local mode** — `executor.resource.gpu` and `task.resource.gpu` should be omitted; let RAPIDS detect the GPU via CUDA directly
+6. **CSV format is not GPU-accelerated** — disable RAPIDS when reading CSV, convert to Parquet for full GPU acceleration
+7. **Driver hostname must be bound to `127.0.0.1`** inside the container to avoid RPC endpoint resolution errors
 
 ---
 
-*Generated on 2026-03-24 | Spark 3.5.0 + RAPIDS 24.02.0 + CUDA 13.0*
+*Spark 3.5.0 + RAPIDS 24.02.0 + CUDA 13.0*
 
+---
 
-
-License
+# License
 
 MIT License
+
+---
+
+# Chapter 4: Feature Engineering
+
+## 4.1 Velocity Features (Window Function)
+
+### Hypothesis
+
+> **Fraudulent transactions tend to occur in rapid succession within a short time window.**
+> A fraudster who obtains card credentials will typically attempt multiple transactions as quickly as possible before the card is blocked.
+> We hypothesize that the **transaction count within a 15-minute window** per card will be significantly higher for fraud cases compared to legitimate ones.
+
+To test this hypothesis, we use a **Spark Window Function** with a 15-minute time-based rolling window partitioned per credit card number:
+
+```python
+from pyspark.sql import functions as F
+from pyspark.sql.window import Window
+
+# Cast timestamp to unix seconds for range-based windowing
+df = df.withColumn("trans_timestamp", F.unix_timestamp("trans_date_trans_time", "yyyy-MM-dd HH:mm:ss"))
+
+# 15-minute rolling window per card
+window_15min = Window \
+    .partitionBy("cc_num") \
+    .orderBy("trans_timestamp") \
+    .rangeBetween(-15 * 60, 0)  # 900 seconds lookback
+
+# Transaction count in last 15 minutes
+df = df.withColumn("tx_count_15min", F.count("trans_num").over(window_15min))
+
+# Total amount in last 15 minutes
+df = df.withColumn("tx_amount_15min", F.sum("amt").over(window_15min))
+```
+
+### Hypothesis Result
+
+```python
+df.groupBy("is_fraud") \
+  .agg(
+    F.round(F.avg("tx_count_15min"), 4).alias("avg_tx_count_15min"),
+    F.round(F.avg("tx_amount_15min"), 2).alias("avg_tx_amount_15min"),
+    F.round(F.max("tx_count_15min"), 0).alias("max_tx_count_15min"),
+    F.count("*").alias("total_rows")
+  ) \
+  .orderBy("is_fraud") \
+  .show()
+```
+
+| Metric | Legitimate | Fraud |
+|--------|-----------|-------|
+| avg_tx_count_15min | 1.047 | 1.195 |
+| avg_tx_amount_15min | $70.74 | $650.40 |
+| max_tx_count_15min | 5 | 5 |
+
+> **Hypothesis partially rejected:** The velocity count difference is minimal (1.047 vs 1.195), which means transaction frequency alone is not a strong fraud indicator in this dataset.
+> However, an unexpected and much stronger signal emerged — **the total transaction amount within 15 minutes is 9x higher for fraud** ($650 vs $70).
+> This suggests that fraudsters in this dataset tend to make **fewer but much larger transactions** rather than many rapid small ones.
+
+---
+
+## 4.2 Category Risk Encoding
+
+Compute fraud rate per merchant category and use it as a feature:
+
+```python
+category_stats = df.groupBy("category") \
+    .agg(
+        F.count("*").alias("total_tx"),
+        F.sum(F.col("is_fraud").cast("int")).alias("fraud_tx")
+    ) \
+    .withColumn("fraud_rate", F.round(F.col("fraud_tx") / F.col("total_tx"), 4)) \
+    .orderBy(F.desc("fraud_rate"))
+
+# Join back to main dataframe
+df = df.join(
+    category_stats.select("category", "fraud_rate")
+        .withColumnRenamed("fraud_rate", "category_fraud_rate"),
+    on="category",
+    how="left"
+)
+```
+
+**Fraud rate by category:**
+
+| Category | Total TX | Fraud TX | Fraud Rate |
+|----------|----------|----------|------------|
+| shopping_net | 97,543 | 1,713 | 1.76% |
+| misc_net | 63,287 | 915 | 1.45% |
+| grocery_pos | 123,638 | 1,743 | 1.41% |
+| shopping_pos | 116,672 | 843 | 0.72% |
+| gas_transport | 131,659 | 618 | 0.47% |
+| health_fitness | 85,879 | 133 | 0.15% |
+
+**Key insights:**
+- `shopping_net` & `misc_net` → **online fraud**, high amount ($999 & $797 avg)
+- `grocery_pos` & `gas_transport` → **card testing attack** pattern (high volume, low amount)
+- `shopping_pos` → **physical store fraud**, high amount ($876 avg)
+
+---
+
+## 4.3 Time-based Features
+
+Fraud often occurs at unusual hours or days:
+
+```python
+from pyspark.sql.functions import hour, dayofweek
+
+df = df \
+    .withColumn("tx_hour", hour("trans_date_trans_time")) \
+    .withColumn("tx_dayofweek", dayofweek("trans_date_trans_time")) \
+    .withColumn("is_night", (F.col("tx_hour") < 6).cast("int")) \
+    .withColumn("is_weekend", (F.col("tx_dayofweek").isin([1, 7])).cast("int")) \
+    .withColumn("amt_log", F.log1p("amt"))  # Log transform for skewed distribution
+```
+
+---
+
+## 4.4 Final Feature Store Schema
+
+| Feature | Type | Description |
+|---------|------|-------------|
+| `amt` | double | Transaction amount |
+| `amt_log` | double | Log-transformed amount |
+| `tx_count_15min` | long | Transaction count in last 15 min |
+| `tx_amount_15min` | double | Total amount in last 15 min |
+| `category_fraud_rate` | double | Historical fraud rate of merchant category |
+| `tx_hour` | int | Hour of transaction (0-23) |
+| `tx_dayofweek` | int | Day of week (1=Sunday, 7=Saturday) |
+| `is_night` | int | 1 if transaction between 00:00-06:00 |
+| `is_weekend` | int | 1 if Saturday or Sunday |
+| `is_fraud` | int | Target label |
+
+```python
+# Save final Feature Store
+df.write \
+    .mode("overwrite") \
+    .parquet("/data/fraud_feature_store")
+
+# Verify
+df_fs = spark.read.parquet("/data/fraud_feature_store")
+print(f"Total rows: {df_fs.count()}")
+print(f"Total columns: {len(df_fs.columns)}")
+```
+
+**Output — all columns in Feature Store:**
+
+```
+Total rows: 1,296,675
+Total columns: 32
+
+['category', 'row_index', 'trans_date_trans_time', 'cc_num', 'merchant',
+ 'amt', 'first', 'last', 'gender', 'street', 'city', 'state', 'zip',
+ 'lat', 'long', 'city_pop', 'job', 'dob', 'trans_num', 'unix_time',
+ 'merch_lat', 'merch_long', 'is_fraud', 'trans_timestamp',
+ 'tx_count_15min', 'tx_amount_15min', 'category_fraud_rate',
+ 'tx_hour', 'tx_dayofweek', 'is_night', 'is_weekend', 'amt_log']
+```
+
+**Output — final class distribution after feature engineering:**
+
+```python
+df_fs.groupBy("is_fraud").count().show()
+```
+
+```
++--------+-------+
+|is_fraud|  count|
++--------+-------+
+|       1|   7506|
+|       0|1289169|
++--------+-------+
+```
+
+> Dataset remains highly imbalanced at **0.58% fraud rate** — this must be addressed during model training using techniques such as SMOTE, class weighting, or threshold optimization.
+
+---
+
+*Next: Chapter 5 — Model Training (XGBoost + Spark MLlib)*
